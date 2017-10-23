@@ -32,6 +32,8 @@ stats_barca = read.table("Stats_Barca2.txt", header = TRUE,sep = ";", dec=",", n
 Barca_Eibar <- read_excel("Barca_Eibar.xlsx")
 Barca_Eibar$Date_naissance = format(Barca_Eibar$Date_naissance,format="%d/%m/%Y")
 
+
+
 surface <- hc_theme_merge(
   hc_theme_tufte(),
   hc_theme(
@@ -42,14 +44,12 @@ surface <- hc_theme_merge(
     ),
     chart = list(
       backgroundColor = "transparent",
-      plotBackgroundImage = "https://github.com/MathieuMarauri/shinyApps/raw/master/data/surface.jpg",
+      plotBackgroundImage = "https://github.com/BenjLasserre/Projet-Sportscode/raw/master/surface2.jpg",
       style = list(fontFamily = "Century Gothic")
     )
   )
 )
 
-highchart() %>% 
-  hc_add_theme(surface)
 
 
 but <- hc_theme_merge(
@@ -62,56 +62,11 @@ but <- hc_theme_merge(
     ),
     chart = list(
       backgroundColor = "transparent",
-      plotBackgroundImage = "https://github.com/MathieuMarauri/shinyApps/raw/master/data/cage.jpg",
+      plotBackgroundImage = "https://github.com/BenjLasserre/Projet-Sportscode/raw/master/cage2.png",
       style = list(fontFamily = "Century Gothic")
     )
   )
 )
-
-highchart() %>% 
-  hc_add_theme(but) %>%
-  hc_chart(type = "scatter") %>%
-  hc_xAxis(visible=T,min=0,max=10) %>%
-  hc_yAxis(visible=T,min = 0) %>%
-  hc_add_series(data = list(
-    list(
-      name = 3,
-      x = 1.7,
-      y = 3.5
-    ),
-    list(
-      name = "Messi",
-      x = 3,
-      y = 4.15
-    ),
-    list(
-      name = "Messi",
-      x = 4,
-      y = 3
-    ),
-    list(
-      name = "Messi",
-      x = 5,
-      y = 3
-    ),
-    list(
-      name = "Messi",
-      x = 3,
-      y = 5
-    )
-  ), color = "#00529F") %>% 
-  hc_title(text = "Le 11 type") %>% 
-  hc_plotOptions(
-    scatter = list(
-      dataLabels = list(
-        enabled = TRUE,
-        format = '<span style="font-size:14px">{point.name}</span><br>',
-        color = "white"
-      ),
-      marker = list(symbol = 'url(https://www.highcharts.com/samples/graphics/sun.png)')
-    )
-  ) %>%
-  hc_tooltip(enabled = FALSE)
 
 
 
@@ -378,6 +333,7 @@ colnames(base_finale) = base_finale[1,]
 base_finale = as.data.frame(base_finale[-1,])
 rownames(base_finale) = NULL
 for(i in 1:ncol(base_finale)){base_finale[,i]= unfactor(base_finale[,i])}
+base_finale[is.na(base_finale)] = 0
 
 
 
@@ -530,6 +486,36 @@ ui <- dashboardPage(
                                     highchartOutput(outputId = 'global_pyramid_plot')
                                   )
                                   
+                  )
+                  ),
+                  fluidRow(column(width = 6, offset = 0,
+                                  div(
+                                    style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                                    highchartOutput(outputId = 'frappes_surface_j1')
+                                  )
+                                  
+                  ),
+                  column(width = 6, offset = 0,
+                         div(
+                           style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                           highchartOutput(outputId = 'frappes_surface_j2')
+                         )
+                         
+                  )
+                  ),
+                  fluidRow(column(width = 6, offset = 0,
+                                  div(
+                                    style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                                    highchartOutput(outputId = 'frappes_cage_j1')
+                                  )
+                                  
+                  ),
+                  column(width = 6, offset = 0,
+                         div(
+                           style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                           highchartOutput(outputId = 'frappes_cage_j2')
+                         )
+                         
                   )
                   )
                 )),
@@ -765,6 +751,257 @@ server <- function(input, output, session) {
       hc_add_series(name = Barca_Eibar$Nom_complet[which(Barca_Eibar$Joueur==input$choix_j2)], data = pyramide_global_j2()$Stats,color = "#93111d")
     
     hc})
+  
+  
+  buts_surface_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_6_metres_B,Tirs_surface_B,Tirs_exterieur_B)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(6,6,6)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  buts_surface_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_6_metres_B,Tirs_surface_B,Tirs_exterieur_B)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(6,6,6)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  cadres_surface_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_6_metres_C,Tirs_surface_C,Tirs_exterieur_C)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(5,5,5)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  cadres_surface_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_6_metres_C,Tirs_surface_C,Tirs_exterieur_C)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(5,5,5)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  non_cadres_surface_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_6_metres_NC,Tirs_surface_NC,Tirs_exterieur_NC)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(4,4,4)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  non_cadres_surface_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_6_metres_NC,Tirs_surface_NC,Tirs_exterieur_NC)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(4,4,4)
+    temp$y = c(7.2,5,1.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  output$frappes_surface_j1 = renderHighchart({
+    highchart() %>% 
+      hc_add_theme(surface) %>%
+      hc_chart(type = "scatter") %>%
+      hc_xAxis(visible=F,min=0,max=10) %>%
+      hc_yAxis(visible=F,min = 0,max=10) %>%
+      hc_add_series(name = "Les frappes non cadrées",data = non_cadres_surface_j1(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_non_cadre2.png)')) %>% 
+      hc_add_series(name = "Les frappes cadrées",data = cadres_surface_j1(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
+      hc_add_series(name = "Les buts",data = buts_surface_j1,
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
+      hc_title(text = "La position des tirs") %>% 
+      hc_plotOptions(
+        scatter = list(
+          dataLabels = list(
+            enabled = TRUE,
+            format = '<span style="font-size:14px">{point.name}</span><br>',
+            color = "white"
+          ))) %>%
+      hc_tooltip(enabled = FALSE) %>%
+      hc_legend(enabled = T)
+  })
+  
+  
+  output$frappes_surface_j2 = renderHighchart({
+    highchart() %>% 
+      hc_add_theme(surface) %>%
+      hc_chart(type = "scatter") %>%
+      hc_xAxis(visible=F,min=0,max=10) %>%
+      hc_yAxis(visible=F,min = 0,max=10) %>%
+      hc_add_series(name = "Les frappes non cadrées",data = non_cadres_surface_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_non_cadre2.png)')) %>% 
+      hc_add_series(name = "Les frappes cadrées",data = cadres_surface_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
+      hc_add_series(name = "Les buts",data = buts_surface_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
+      hc_title(text = "La position des tirs") %>% 
+      hc_plotOptions(
+        scatter = list(
+          dataLabels = list(
+            enabled = TRUE,
+            format = '<span style="font-size:14px">{point.name}</span><br>',
+            color = "white"
+          ))) %>%
+      hc_tooltip(enabled = FALSE) %>%
+      hc_legend(enabled = T)
+  })
+  
+  
+  buts_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_BBG:Tirs_BHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(3.1,5.3,7.5,3.1,5.3,7.5)
+    temp$y = c(3.6,3.6,3.6,5.6,5.6,5.6)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  buts_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_BBG:Tirs_BHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(3.1,5.3,7.5,3.1,5.3,7.5)
+    temp$y = c(3.6,3.6,3.6,5.6,5.6,5.6)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  cadres_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_CBG:Tirs_CHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(2.3,4.5,6.7,2.3,4.5,6.7)
+    temp$y = c(3.6,3.6,3.6,5.6,5.6,5.6)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  cadres_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_CBG:Tirs_CHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(2.3,4.5,6.7,2.3,4.5,6.7)
+    temp$y = c(3.6,3.6,3.6,5.6,5.6,5.6)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  non_cadres_j1 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_NCG:Tirs_NCHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(0.9,9.1,5,0.9,9.1)
+    temp$y = c(5,5,8.1,8.1,8.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })  
+  
+  non_cadres_j2 = reactive({
+    temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_NCG:Tirs_NCHD)
+    temp = as.data.frame(t(temp))
+    colnames(temp) = 'name'
+    temp$x = c(0.9,9.1,5,0.9,9.1)
+    temp$y = c(5,5,8.1,8.1,8.1)
+    temp$x[which(is.na(temp$name))] = NA
+    temp$y[which(is.na(temp$name))] = NA
+    rownames(temp) = NULL
+    temp
+  })
+  
+  
+  output$frappes_cage_j1 = renderHighchart({
+    highchart() %>% 
+      hc_add_theme(but) %>%
+      hc_chart(type = "scatter") %>%
+      hc_xAxis(visible=F,min=0,max=10) %>%
+      hc_yAxis(visible=F,min = 0,max=10) %>%
+      hc_add_series(name = "Les frappes non cadrées",data = non_cadres_j1(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_non_cadre2.png)')) %>% 
+      hc_add_series(name = "Les frappes cadrées",data = cadres_j1(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
+      hc_add_series(name = "Les buts",data = buts_j1(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
+      hc_title(text = "Le cadrage des frappes") %>% 
+      hc_plotOptions(
+        scatter = list(
+          dataLabels = list(
+            enabled = TRUE,
+            format = '<span style="font-size:14px">{point.name}</span><br>',
+            color = "white"
+          ))) %>%
+      hc_tooltip(enabled = FALSE) %>%
+      hc_legend(enabled = T)
+  })
+  
+  
+  output$frappes_cage_j2 = renderHighchart({
+    highchart() %>% 
+      hc_add_theme(but) %>%
+      hc_chart(type = "scatter") %>%
+      hc_xAxis(visible=F,min=0,max=10) %>%
+      hc_yAxis(visible=F,min = 0,max=10) %>%
+      hc_add_series(name = "Les frappes non cadrées",data = non_cadres_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_non_cadre2.png)')) %>% 
+      hc_add_series(name = "Les frappes cadrées",data = cadres_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
+      hc_add_series(name = "Les buts",data = buts_j2(),
+                    marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
+      hc_title(text = "Le cadrage des frappes") %>% 
+      hc_plotOptions(
+        scatter = list(
+          dataLabels = list(
+            enabled = TRUE,
+            format = '<span style="font-size:14px">{point.name}</span><br>',
+            color = "white"
+          ))) %>%
+      hc_tooltip(enabled = FALSE) %>%
+      hc_legend(enabled = T)
+  })
+  
   
   
   ### Pour l'onglet des gammes de jeu, le corps change selon la gamme de jeu (hasard ou précision) choisie
@@ -1028,26 +1265,26 @@ server <- function(input, output, session) {
         hc_legend(align ='right', verticalAlign ='top', layout='vertical') %>%
         hc_tooltip(headerFormat='<span style="font-size:11px">{point.x}</span><br>',
                    pointFormat='<span style="color:{series.color}">{series.name}</span>: <b>{point.y}%<br/>') %>%
-        hc_add_series(name = 'Lionel Messi', data = base_finale$Messi, pointPlacement = 'on') %>%
-        hc_add_series(name = 'Luis Suarez', data = base_finale$Suarez, pointPlacement = 'on') %>%
-        hc_add_series(name = 'Neymar JR', data = base_finale$Neymar, pointPlacement = 'on') %>%
-        hc_add_series(name = 'Sandro Ramirez', data = base_finale$Ramirez, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Munir El Haddadi', data = base_finale$`El Haddadi`, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Andres Iniesta', data = base_finale$Iniesta, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Ivan Rakitic', data = base_finale$Rakitic, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Sergi Roberto', data = base_finale$Roberto, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Rafinha', data = base_finale$Rafinha, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Sergio Busquets', data = base_finale$Busquets, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Gerard Gumbau', data = base_finale$Gumbau, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Jordi Alba', data = base_finale$Alba, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Dani Alves', data = base_finale$Alves, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Gerard Pique', data = base_finale$Pique, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Marc Bartra', data = base_finale$Bartra, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Javier Mascherano', data = base_finale$Mascherano, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Adriano', data = base_finale$Adriano, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Douglas', data = base_finale$Douglas, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Jeremy Mathieu', data = base_finale$Mathieu, pointPlacement = 'on',visible=F) %>%
-        hc_add_series(name = 'Thomas Vermaelen', data = base_finale$Vermaelen, pointPlacement = 'on',visible=F) 
+        hc_add_series(name = 'Lionel Messi', data = base_finale$Messi, pointPlacement = 'on',color="#00529F") %>%
+        hc_add_series(name = 'Luis Suarez', data = base_finale$Suarez, pointPlacement = 'on',color="#e5bd2b") %>%
+        hc_add_series(name = 'Neymar JR', data = base_finale$Neymar, pointPlacement = 'on',color="#93111d") %>%
+        hc_add_series(name = 'Sandro Ramirez', data = base_finale$Ramirez, pointPlacement = 'on',visible=F,color="#222d32") %>%
+        hc_add_series(name = 'Munir El Haddadi', data = base_finale$`El Haddadi`, pointPlacement = 'on',visible=F,color="#00529F") %>%
+        hc_add_series(name = 'Andres Iniesta', data = base_finale$Iniesta, pointPlacement = 'on',visible=F,color="#e5bd2b") %>%
+        hc_add_series(name = 'Ivan Rakitic', data = base_finale$Rakitic, pointPlacement = 'on',visible=F,color="#93111d") %>%
+        hc_add_series(name = 'Sergi Roberto', data = base_finale$Roberto, pointPlacement = 'on',visible=F,color="#222d32") %>%
+        hc_add_series(name = 'Rafinha', data = base_finale$Rafinha, pointPlacement = 'on',visible=F,color="#00529F") %>%
+        hc_add_series(name = 'Sergio Busquets', data = base_finale$Busquets, pointPlacement = 'on',visible=F,color="#e5bd2b") %>%
+        hc_add_series(name = 'Gerard Gumbau', data = base_finale$Gumbau, pointPlacement = 'on',visible=F,color="#93111d") %>%
+        hc_add_series(name = 'Jordi Alba', data = base_finale$Alba, pointPlacement = 'on',visible=F,color="#222d32") %>%
+        hc_add_series(name = 'Dani Alves', data = base_finale$Alves, pointPlacement = 'on',visible=F,color="#00529F") %>%
+        hc_add_series(name = 'Gerard Pique', data = base_finale$Pique, pointPlacement = 'on',visible=F,color="#e5bd2b") %>%
+        hc_add_series(name = 'Marc Bartra', data = base_finale$Bartra, pointPlacement = 'on',visible=F,color="#93111d") %>%
+        hc_add_series(name = 'Javier Mascherano', data = base_finale$Mascherano, pointPlacement = 'on',visible=F,color="#222d32") %>%
+        hc_add_series(name = 'Adriano', data = base_finale$Adriano, pointPlacement = 'on',visible=F,color="#00529F") %>%
+        hc_add_series(name = 'Douglas', data = base_finale$Douglas, pointPlacement = 'on',visible=F,color="#e5bd2b") %>%
+        hc_add_series(name = 'Jeremy Mathieu', data = base_finale$Mathieu, pointPlacement = 'on',visible=F,color="#93111d") %>%
+        hc_add_series(name = 'Thomas Vermaelen', data = base_finale$Vermaelen, pointPlacement = 'on',visible=F,color="#222d32") 
       
       hc})
     
