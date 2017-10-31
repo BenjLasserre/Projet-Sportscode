@@ -388,7 +388,7 @@ base_finale = merge(tableau_temps[,c(1,5,6)],base_finale,by=c('Joueur'),all=TRUE
 base_finale = base_finale[-which(base_finale$Joueur=="Joueur(s) exclu(s)"),]
 
 ## On norme les valeurs, en pourcentage, pour le radar plus tard
-base_finale$`Temps de jeu moyen (mn)` = round(base_finale$`Temps de jeu moyen (mn)`*100/94)
+base_finale$`Temps de jeu moyen (mn/match)` = round(base_finale$`Temps de jeu moyen (mn/match)`*100/94)
 base_finale$`Nombre de titularisation(s)` = round(base_finale$`Nombre de titularisation(s)`/15*100)
 base_finale$But = round(base_finale$But/max(base_finale$But,na.rm = T)*100)
 base_finale$passes_clees = round(base_finale$passes_clees/max(base_finale$passes_clees,na.rm = T)*100)
