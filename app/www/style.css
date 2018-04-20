@@ -1,0 +1,102 @@
+.main-header .logo {
+
+    height: 114px
+
+}
+
+.left-side, .main-sidebar {padding-top: 110px}
+
+:root {
+  --font: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+  --barca-blue: #00529F;
+
+}
+
+
+/* Title */
+
+.main-header .logo {
+  font-family: var(--font);
+}
+
+/* sidebar */
+
+.skin-blue .main-sidebar {
+  font-family: var(--font);}
+
+
+/* Color of the header right side */
+
+.skin-blue .main-header .navbar {
+background-image: url('pelouse7.jpg');
+background-size: 20%;}
+
+
+/* Color of the header left side */
+
+.skin-blue .main-header .logo{
+background-color: #222d32;
+}
+
+
+/* Color of the header left side */
+
+.skin-blue .main-header .logo:hover{
+background-color: #222d32;
+}
+
+/* Color of the header right side when hover*/
+
+.skin-blue .main-header .logo:hover{
+background-color: var(--barca-blue);
+}
+
+/* Color of the header right side when hover*/
+
+.skin-blue .main-header .navbar .sidebar-toggle {
+background-image: url('pelouse7.jpg');
+background-size: 2%;
+color: var(--barca-blue);
+}
+
+
+/* Color of the header toggle when hover */
+
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+
+background-image: url('pelouse7.jpg');
+background-size: 2%;
+color: var(--barca-blue);
+}
+
+/* Pour mettre la pelouse en fond */
+.content-wrapper {
+  background-image: url('pelouse7.jpg');
+  background-repeat: repeat;
+  background-size: 20%;
+}
+
+
+
+/* Pour pouvoir découper le profil des joueurs en 3 colonnes. Obligatoirement dans cet ordre les 5 parties */
+.niveau1_profil{
+  width: 100%;
+  position: relative;
+}
+
+.niveau2_profil{
+  width: 33%;
+}
+
+.left{
+  float: left;
+  padding-top: 12px
+}
+
+.center{
+  margin: 0 auto;
+}
+
+.right{
+  float: right;
+}

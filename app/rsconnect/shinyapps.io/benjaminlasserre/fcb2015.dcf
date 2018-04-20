@@ -1,0 +1,13 @@
+name: fcb2015
+title: FCB2015
+username:
+account: benjaminlasserre
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 216771
+bundleId: 989574
+url: https://benjaminlasserre.shinyapps.io/fcb2015/
+when: 1505923249.96441
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Stats_Barca.csv

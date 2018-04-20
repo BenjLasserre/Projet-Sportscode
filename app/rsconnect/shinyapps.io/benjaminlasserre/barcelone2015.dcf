@@ -1,0 +1,13 @@
+name: barcelone2015
+title: Barcelone2015
+username:
+account: benjaminlasserre
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 216482
+bundleId: 989332
+url: https://benjaminlasserre.shinyapps.io/barcelone2015/
+when: 1505915967.98389
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Stats_Barca.csv

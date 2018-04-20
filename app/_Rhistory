@@ -1,0 +1,512 @@
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{category}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{category.name}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{this.value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(formatter = '{this.value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+actions_tot_by_day = actions_tot %>% filter(journee==gsub("^.*(J\\d{1,2}).*$", "\\1", "tata J4 bite", perl = TRUE))
+actions_effectif_by_day = filter(actions_tot_by_day,code=='Temps') %>% select(c(-code,-duree_action,-av_av_dp,-av_dp,-dp,-finalite,-fnt,
+-periode,-qualite_passe,-score,-type_phase,-passe_dec,
+-qualite_passe_dec))
+actions_jeu_by_day = filter(actions_tot_by_day,code!='Temps') %>% select(c(ID,start,end,duree_action,av_av_dp,av_dp,dp,finalite,fnt,
+periode,qualite_passe,score,type_phase,passe_dec,
+qualite_passe_dec,competition,journee,lieu))
+actions_effectif_by_day = as.data.frame(actions_effectif_by_day)
+joueurs_by_day = unique(c(actions_effectif_by_day$joueur_1,actions_effectif_by_day$joueur_2,actions_effectif_by_day$joueur_3,
+actions_effectif_by_day$joueur_4,actions_effectif_by_day$joueur_5,actions_effectif_by_day$joueur_6,
+actions_effectif_by_day$joueur_7,actions_effectif_by_day$joueur_8,actions_effectif_by_day$joueur_9,
+actions_effectif_by_day$joueur_10))
+titu_by_day = actions_effectif_by_day %>% group_by(journee) %>% summarise_all(funs(first))
+tableau_temps_by_day = data.frame()
+for(i in 1:length(joueurs_by_day)){
+if(is.na(joueurs_by_day[i])){
+tableau_temps_by_day[i,1] = "Joueur(s) exclu(s)"
+indic = which(is.na(actions_effectif_by_day[,c('joueur_1','joueur_2','joueur_3','joueur_4',
+'joueur_5','joueur_6','joueur_7','joueur_8',
+'joueur_9','joueur_10')])) %% nrow(actions_effectif_by_day)
+for(j in 1:length(indic)){if(indic[j]==0){indic[j]=nrow(actions_effectif_by_day)}}
+tableau_temps_by_day[i,2] = round(sum(actions_effectif_by_day$duree_jeu[indic])/60)
+tableau_temps_by_day[i,3] = NA
+} else {
+tableau_temps_by_day[i,1] = joueurs_by_day[i]
+indic = which(joueurs_by_day[i] == actions_effectif_by_day[,c('joueur_1','joueur_2','joueur_3','joueur_4',
+'joueur_5','joueur_6','joueur_7','joueur_8',
+'joueur_9','joueur_10')]) %% nrow(actions_effectif_by_day)
+for(j in 1:length(indic)){if(indic[j]==0){indic[j]=nrow(actions_effectif_by_day)}}
+tableau_temps_by_day[i,2] = round(sum(actions_effectif_by_day$duree_jeu[indic])/60)
+tableau_temps_by_day[i,3] = ifelse(1 %in% indic,"Titulaire","Remplaçant")
+}
+remove(indic)
+}
+colnames(tableau_temps_by_day) = c("Joueur","Temps de jeu","Statut")
+tableau_temps_by_day$Poste = NA
+for(i in 1:nrow(tableau_temps_by_day)){
+if(tableau_temps_by_day$Joueur[i]=='Alba'){
+tableau_temps_by_day$Poste[i]='DG'
+}else if(tableau_temps_by_day$Joueur[i]=='Mascherano'){
+tableau_temps_by_day$Poste[i]='DCG'
+}else if(tableau_temps_by_day$Joueur[i]=='Roberto'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='Vermaelen'){
+tableau_temps_by_day$Poste[i]='DCD'
+}else if(tableau_temps_by_day$Joueur[i]=='Mathieu'){
+tableau_temps_by_day$Poste[i]='DCG'
+}else if(tableau_temps_by_day$Joueur[i]=='Busquets'){
+tableau_temps_by_day$Poste[i]='MC'
+}else if(tableau_temps_by_day$Joueur[i]=='Bartra'){
+tableau_temps_by_day$Poste[i]='DD'
+}else if(tableau_temps_by_day$Joueur[i]=='Suarez'){
+tableau_temps_by_day$Poste[i]='AC'
+}else if(tableau_temps_by_day$Joueur[i]=='Neymar'){
+tableau_temps_by_day$Poste[i]='AG'
+}else if(tableau_temps_by_day$Joueur[i]=='Rakitic'){
+tableau_temps_by_day$Poste[i]='MD'
+}else if(tableau_temps_by_day$Joueur[i]=='Pique'){
+tableau_temps_by_day$Poste[i]='DCD'
+}else if(tableau_temps_by_day$Joueur[i]=='Alves'){
+tableau_temps_by_day$Poste[i]='DD'
+}else if(tableau_temps_by_day$Joueur[i]=='Iniesta'){
+tableau_temps_by_day$Poste[i]='MG'
+}else if(tableau_temps_by_day$Joueur[i]=='Messi'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='El Haddadi'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='Ramirez'){
+tableau_temps_by_day$Poste[i]='AG'
+}else if(tableau_temps_by_day$Joueur[i]=='Adriano'){
+tableau_temps_by_day$Poste[i]='DG'
+}else if(tableau_temps_by_day$Joueur[i]=='Rafinha'){
+tableau_temps_by_day$Poste[i]='MG'
+}else if(tableau_temps_by_day$Joueur[i]=='Gumbau'){
+tableau_temps_by_day$Poste[i]='MC'
+}else if(tableau_temps_by_day$Joueur[i]=='Douglas'){
+tableau_temps_by_day$Poste[i]='DD'
+}else {
+tableau_temps_by_day$Poste[i]='ZZZ'
+}
+}
+tableau_temps_by_day$x = NA
+tableau_temps_by_day$y = NA
+for(i in 1:nrow(tableau_temps_by_day)){
+if(tableau_temps_by_day$Poste[i]=='DD'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=1
+}else if(tableau_temps_by_day$Poste[i]=='DCD'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=2
+}else if(tableau_temps_by_day$Poste[i]=='DCG'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=3
+}else if(tableau_temps_by_day$Poste[i]=='DG'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=4
+}else if(tableau_temps_by_day$Poste[i]=='MD'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=1.5
+}else if(tableau_temps_by_day$Poste[i]=='MC'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=2.5
+}else if(tableau_temps_by_day$Poste[i]=='MG'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=3.5
+}else if(tableau_temps_by_day$Poste[i]=='AD'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=1.5
+}else if(tableau_temps_by_day$Poste[i]=='AC'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=2.5
+}else if(tableau_temps_by_day$Poste[i]=='AG'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=3.5
+}
+}
+#rownames(tableau_temps_by_day) = c('18','14','20','23','24','5','15','9','3','8','17','11','4','6','10','19','21','28','2','12','--')
+actions_jeu_by_day = as.data.frame(actions_jeu_by_day)
+actions_jeu_by_day$finalite[is.na(actions_jeu_by_day$finalite)] = '1/2 occasions'
+actions_jeu_by_day = actions_jeu_by_day %>% group_by(journee) %>%
+mutate(but_pour = cumsum(ifelse(finalite=='But',1,0)),score2 = lead(score))
+actions_jeu_by_day$score2 = as.numeric(actions_jeu_by_day$score2)
+for(i in 1:nrow(actions_jeu_by_day)){if(is.na(actions_jeu_by_day$score2[i])){actions_jeu_by_day$score2[i]=actions_jeu_by_day$score2[i-1]}}
+actions_jeu_by_day$but_contre = actions_jeu_by_day$but_pour - actions_jeu_by_day$score2
+actions_jeu_by_day = actions_jeu_by_day %>% select(-score2) %>% mutate(score_match = paste0(but_pour,'-',but_contre))
+occaz_but_by_day = spread(as.data.frame(table(actions_jeu_by_day$fnt,actions_jeu_by_day$finalite)),Var2,Freq)
+colnames(occaz_but_by_day)[1] = "Joueur"
+occaz_but_by_day$Efficacite = round(occaz_but_by_day$But/(occaz_but_by_day$But+occaz_but_by_day$Occasions)*100)
+passes_d_by_day = as.data.frame(table(actions_jeu_by_day$passe_dec))
+colnames(passes_d_by_day) = c("Joueur","passes_decisives")
+passes_clees_dp_by_day = as.data.frame(table(actions_jeu_by_day$dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_dp_by_day) = c('Joueur','passes_clees_dp')
+passes_clees_av_dp_by_day = as.data.frame(table(actions_jeu_by_day$av_dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_av_dp_by_day) = c('Joueur','passes_clees_av_dp')
+passes_clees_av_av_dp_by_day = as.data.frame(table(actions_jeu_by_day$av_av_dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_av_av_dp_by_day) = c('Joueur','passes_clees_av_av_dp')
+passes_clees_by_day = merge(passes_clees_dp_by_day,passes_clees_av_dp_by_day,by=c('Joueur'),all=TRUE)
+passes_clees_by_day = merge(passes_clees_by_day,passes_clees_av_av_dp_by_day,by=c('Joueur'),all=TRUE)
+passes_clees_by_day$passes_clees = rowSums(passes_clees_by_day[,-1],na.rm = TRUE)
+# colnames(passes_clees)
+base_finale_by_day = merge(passes_clees_by_day[,c(1,5)],passes_d_by_day,by=c('Joueur'),all=TRUE)
+base_finale_by_day = merge(occaz_but_by_day[,c(1,3,5)],base_finale_by_day,by=c('Joueur'),all=TRUE)
+base_finale_by_day = merge(tableau_temps_by_day[,c(1,2)],base_finale_by_day,by=c('Joueur'),all=TRUE)
+if(length(which(base_finale_by_day$Joueur=="Joueur(s) exclu(s)"))>0){
+base_finale_by_day = base_finale_by_day[-which(base_finale_by_day$Joueur=="Joueur(s) exclu(s)"),]
+}
+base_finale_by_day$`Temps de jeu` = round(base_finale_by_day$`Temps de jeu`/max(base_finale_by_day$`Temps de jeu`,na.rm = T)*100)
+base_finale_by_day$But = round(base_finale_by_day$But/max(base_finale_by_day$But,na.rm = T)*100)
+base_finale_by_day$passes_clees = round(base_finale_by_day$passes_clees/max(base_finale_by_day$passes_clees,na.rm = T)*100)
+base_finale_by_day$passes_decisives = round(base_finale_by_day$passes_decisives/max(base_finale_by_day$passes_decisives,na.rm = T)*100)
+base_finale_by_day = t(base_finale_by_day)
+colnames(base_finale_by_day) = base_finale_by_day[1,]
+base_finale_by_day = as.data.frame(base_finale_by_day[-1,])
+rownames(base_finale_by_day) = NULL
+for(i in 1:ncol(base_finale_by_day)){base_finale_by_day[,i]= unfactor(base_finale_by_day[,i])}
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+actions_tot_by_day = actions_tot %>% filter(journee==gsub("^.*(J\\d{1,2}).*$", "\\1", "tata J3 bite", perl = TRUE))
+actions_effectif_by_day = filter(actions_tot_by_day,code=='Temps') %>% select(c(-code,-duree_action,-av_av_dp,-av_dp,-dp,-finalite,-fnt,
+-periode,-qualite_passe,-score,-type_phase,-passe_dec,
+-qualite_passe_dec))
+actions_jeu_by_day = filter(actions_tot_by_day,code!='Temps') %>% select(c(ID,start,end,duree_action,av_av_dp,av_dp,dp,finalite,fnt,
+periode,qualite_passe,score,type_phase,passe_dec,
+qualite_passe_dec,competition,journee,lieu))
+actions_effectif_by_day = as.data.frame(actions_effectif_by_day)
+joueurs_by_day = unique(c(actions_effectif_by_day$joueur_1,actions_effectif_by_day$joueur_2,actions_effectif_by_day$joueur_3,
+actions_effectif_by_day$joueur_4,actions_effectif_by_day$joueur_5,actions_effectif_by_day$joueur_6,
+actions_effectif_by_day$joueur_7,actions_effectif_by_day$joueur_8,actions_effectif_by_day$joueur_9,
+actions_effectif_by_day$joueur_10))
+titu_by_day = actions_effectif_by_day %>% group_by(journee) %>% summarise_all(funs(first))
+tableau_temps_by_day = data.frame()
+for(i in 1:length(joueurs_by_day)){
+if(is.na(joueurs_by_day[i])){
+tableau_temps_by_day[i,1] = "Joueur(s) exclu(s)"
+indic = which(is.na(actions_effectif_by_day[,c('joueur_1','joueur_2','joueur_3','joueur_4',
+'joueur_5','joueur_6','joueur_7','joueur_8',
+'joueur_9','joueur_10')])) %% nrow(actions_effectif_by_day)
+for(j in 1:length(indic)){if(indic[j]==0){indic[j]=nrow(actions_effectif_by_day)}}
+tableau_temps_by_day[i,2] = round(sum(actions_effectif_by_day$duree_jeu[indic])/60)
+tableau_temps_by_day[i,3] = NA
+} else {
+tableau_temps_by_day[i,1] = joueurs_by_day[i]
+indic = which(joueurs_by_day[i] == actions_effectif_by_day[,c('joueur_1','joueur_2','joueur_3','joueur_4',
+'joueur_5','joueur_6','joueur_7','joueur_8',
+'joueur_9','joueur_10')]) %% nrow(actions_effectif_by_day)
+for(j in 1:length(indic)){if(indic[j]==0){indic[j]=nrow(actions_effectif_by_day)}}
+tableau_temps_by_day[i,2] = round(sum(actions_effectif_by_day$duree_jeu[indic])/60)
+tableau_temps_by_day[i,3] = ifelse(1 %in% indic,"Titulaire","Remplaçant")
+}
+remove(indic)
+}
+colnames(tableau_temps_by_day) = c("Joueur","Temps de jeu","Statut")
+tableau_temps_by_day$Poste = NA
+for(i in 1:nrow(tableau_temps_by_day)){
+if(tableau_temps_by_day$Joueur[i]=='Alba'){
+tableau_temps_by_day$Poste[i]='DG'
+}else if(tableau_temps_by_day$Joueur[i]=='Mascherano'){
+tableau_temps_by_day$Poste[i]='DCG'
+}else if(tableau_temps_by_day$Joueur[i]=='Roberto'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='Vermaelen'){
+tableau_temps_by_day$Poste[i]='DCD'
+}else if(tableau_temps_by_day$Joueur[i]=='Mathieu'){
+tableau_temps_by_day$Poste[i]='DCG'
+}else if(tableau_temps_by_day$Joueur[i]=='Busquets'){
+tableau_temps_by_day$Poste[i]='MC'
+}else if(tableau_temps_by_day$Joueur[i]=='Bartra'){
+tableau_temps_by_day$Poste[i]='DD'
+}else if(tableau_temps_by_day$Joueur[i]=='Suarez'){
+tableau_temps_by_day$Poste[i]='AC'
+}else if(tableau_temps_by_day$Joueur[i]=='Neymar'){
+tableau_temps_by_day$Poste[i]='AG'
+}else if(tableau_temps_by_day$Joueur[i]=='Rakitic'){
+tableau_temps_by_day$Poste[i]='MD'
+}else if(tableau_temps_by_day$Joueur[i]=='Pique'){
+tableau_temps_by_day$Poste[i]='DCD'
+}else if(tableau_temps_by_day$Joueur[i]=='Alves'){
+tableau_temps_by_day$Poste[i]='DD'
+}else if(tableau_temps_by_day$Joueur[i]=='Iniesta'){
+tableau_temps_by_day$Poste[i]='MG'
+}else if(tableau_temps_by_day$Joueur[i]=='Messi'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='El Haddadi'){
+tableau_temps_by_day$Poste[i]='AD'
+}else if(tableau_temps_by_day$Joueur[i]=='Ramirez'){
+tableau_temps_by_day$Poste[i]='AG'
+}else if(tableau_temps_by_day$Joueur[i]=='Adriano'){
+tableau_temps_by_day$Poste[i]='DG'
+}else if(tableau_temps_by_day$Joueur[i]=='Rafinha'){
+tableau_temps_by_day$Poste[i]='MG'
+}else if(tableau_temps_by_day$Joueur[i]=='Gumbau'){
+tableau_temps_by_day$Poste[i]='MC'
+}else if(tableau_temps_by_day$Joueur[i]=='Douglas'){
+tableau_temps_by_day$Poste[i]='DD'
+}else {
+tableau_temps_by_day$Poste[i]='ZZZ'
+}
+}
+tableau_temps_by_day$x = NA
+tableau_temps_by_day$y = NA
+for(i in 1:nrow(tableau_temps_by_day)){
+if(tableau_temps_by_day$Poste[i]=='DD'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=1
+}else if(tableau_temps_by_day$Poste[i]=='DCD'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=2
+}else if(tableau_temps_by_day$Poste[i]=='DCG'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=3
+}else if(tableau_temps_by_day$Poste[i]=='DG'){
+tableau_temps_by_day$x[i]=1
+tableau_temps_by_day$y[i]=4
+}else if(tableau_temps_by_day$Poste[i]=='MD'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=1.5
+}else if(tableau_temps_by_day$Poste[i]=='MC'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=2.5
+}else if(tableau_temps_by_day$Poste[i]=='MG'){
+tableau_temps_by_day$x[i]=2
+tableau_temps_by_day$y[i]=3.5
+}else if(tableau_temps_by_day$Poste[i]=='AD'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=1.5
+}else if(tableau_temps_by_day$Poste[i]=='AC'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=2.5
+}else if(tableau_temps_by_day$Poste[i]=='AG'){
+tableau_temps_by_day$x[i]=3
+tableau_temps_by_day$y[i]=3.5
+}
+}
+#rownames(tableau_temps_by_day) = c('18','14','20','23','24','5','15','9','3','8','17','11','4','6','10','19','21','28','2','12','--')
+actions_jeu_by_day = as.data.frame(actions_jeu_by_day)
+actions_jeu_by_day$finalite[is.na(actions_jeu_by_day$finalite)] = '1/2 occasions'
+actions_jeu_by_day = actions_jeu_by_day %>% group_by(journee) %>%
+mutate(but_pour = cumsum(ifelse(finalite=='But',1,0)),score2 = lead(score))
+actions_jeu_by_day$score2 = as.numeric(actions_jeu_by_day$score2)
+for(i in 1:nrow(actions_jeu_by_day)){if(is.na(actions_jeu_by_day$score2[i])){actions_jeu_by_day$score2[i]=actions_jeu_by_day$score2[i-1]}}
+actions_jeu_by_day$but_contre = actions_jeu_by_day$but_pour - actions_jeu_by_day$score2
+actions_jeu_by_day = actions_jeu_by_day %>% select(-score2) %>% mutate(score_match = paste0(but_pour,'-',but_contre))
+occaz_but_by_day = spread(as.data.frame(table(actions_jeu_by_day$fnt,actions_jeu_by_day$finalite)),Var2,Freq)
+colnames(occaz_but_by_day)[1] = "Joueur"
+occaz_but_by_day$Efficacite = round(occaz_but_by_day$But/(occaz_but_by_day$But+occaz_but_by_day$Occasions)*100)
+passes_d_by_day = as.data.frame(table(actions_jeu_by_day$passe_dec))
+colnames(passes_d_by_day) = c("Joueur","passes_decisives")
+passes_clees_dp_by_day = as.data.frame(table(actions_jeu_by_day$dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_dp_by_day) = c('Joueur','passes_clees_dp')
+passes_clees_av_dp_by_day = as.data.frame(table(actions_jeu_by_day$av_dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_av_dp_by_day) = c('Joueur','passes_clees_av_dp')
+passes_clees_av_av_dp_by_day = as.data.frame(table(actions_jeu_by_day$av_av_dp[which(actions_jeu_by_day$qualite_passe=='Passes clees')]))
+colnames(passes_clees_av_av_dp_by_day) = c('Joueur','passes_clees_av_av_dp')
+passes_clees_by_day = merge(passes_clees_dp_by_day,passes_clees_av_dp_by_day,by=c('Joueur'),all=TRUE)
+passes_clees_by_day = merge(passes_clees_by_day,passes_clees_av_av_dp_by_day,by=c('Joueur'),all=TRUE)
+passes_clees_by_day$passes_clees = rowSums(passes_clees_by_day[,-1],na.rm = TRUE)
+# colnames(passes_clees)
+base_finale_by_day = merge(passes_clees_by_day[,c(1,5)],passes_d_by_day,by=c('Joueur'),all=TRUE)
+base_finale_by_day = merge(occaz_but_by_day[,c(1,3,5)],base_finale_by_day,by=c('Joueur'),all=TRUE)
+base_finale_by_day = merge(tableau_temps_by_day[,c(1,2)],base_finale_by_day,by=c('Joueur'),all=TRUE)
+if(length(which(base_finale_by_day$Joueur=="Joueur(s) exclu(s)"))>0){
+base_finale_by_day = base_finale_by_day[-which(base_finale_by_day$Joueur=="Joueur(s) exclu(s)"),]
+}
+base_finale_by_day$`Temps de jeu` = round(base_finale_by_day$`Temps de jeu`/max(base_finale_by_day$`Temps de jeu`,na.rm = T)*100)
+base_finale_by_day$But = round(base_finale_by_day$But/max(base_finale_by_day$But,na.rm = T)*100)
+base_finale_by_day$passes_clees = round(base_finale_by_day$passes_clees/max(base_finale_by_day$passes_clees,na.rm = T)*100)
+base_finale_by_day$passes_decisives = round(base_finale_by_day$passes_decisives/max(base_finale_by_day$passes_decisives,na.rm = T)*100)
+base_finale_by_day = t(base_finale_by_day)
+colnames(base_finale_by_day) = base_finale_by_day[1,]
+base_finale_by_day = as.data.frame(base_finale_by_day[-1,])
+rownames(base_finale_by_day) = NULL
+for(i in 1:ncol(base_finale_by_day)){base_finale_by_day[,i]= unfactor(base_finale_by_day[,i])}
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(formatter: function () {
+return [this.value];
+})) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(formatter=function () {
+return [this.value];
+})) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+passes_d_by_day$Joueur
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{point.x}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}',padding=10)) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '{value}',padding='10')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '<strong>{value}',padding='10')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+hc <- highchart() %>%
+hc_title(text="Nombre de passes décisives") %>%
+hc_chart(type = "column") %>%
+hc_yAxis(title = list(text = "Nombre de passes"), labels = list(format = '{value}')) %>%
+hc_xAxis(categories=passes_d_by_day$Joueur,labels = list(format = '<br>{value}',padding='10')) %>%
+hc_add_series(name = "Les passes",colorByPoint = FALSE,data = passes_d_by_day$passes_decisives,color="#00529F",
+dataLabels = list(enabled = TRUE))
+hc
+runApp()
+runApp()
+runApp()
+runApp()
+View(actions_jeu)
+stats_barca = read.table("Stats_Barca2.txt", header = TRUE,sep = ";", dec=",", na.strings = "",
+colClasses = c("character","numeric","numeric","character","character","character"))
+for(i in 1:15){
+temp = stats_barca[which(stats_barca$ID %in% stats_barca$ID[which(stats_barca$text==paste0('J',i))]),]
+temp$group = tolower(temp$group)
+temp$group = gsub(' ','_',temp$group)
+#temp$group = iconv(temp$group, to="ASCII//TRANSLIT//IGNORE")
+#temp$group = gsub('é','e',temp$group)
+#temp$text = gsub('é','e',temp$text)
+temp = temp[-which(temp$text=="All"),]
+temp2 = temp %>% filter(is.na(group)) %>%  group_by(ID) %>% mutate(counter = ave(text, ID, FUN = seq_along))
+temp2$group[is.na(temp2$group)] = 'joueur_'
+for(j in 1:nrow(temp2)){
+if(temp2$group[j] == 'joueur_'){
+temp2$group[j] = paste0(temp2$group[j],temp2$counter[j])
+}
+}
+temp2 = temp2[,c(1,5,6)]
+temp = merge(temp,temp2,by=c("ID","text"),all.x = TRUE) %>% unite_('group',c('group.x','group.y'),sep="")
+temp$group = gsub('NA','',temp$group,fixed = TRUE)
+for(j in 1:nrow(temp)){
+if(temp$text[j] == 'Passes clees'){
+temp$group[j] = 'qualite_passe'
+}
+}
+temp = temp %>% mutate(row = row_number(rownames(temp))) %>% spread(group, text) %>% select(-row)
+temp[is.na(temp)] = "--"
+temp = temp %>% group_by(ID) %>% summarise_all(funs(max))
+temp[temp=="--"] = NA
+temp$passe_dec = NA
+temp$qualite_passe_dec = NA
+for (j in 1:nrow(temp)){
+if(!is.na(temp$finalite[j]) & temp$finalite[j] == "But"){
+temp$passe_dec[j] = temp$dp[j]
+temp$qualite_passe_dec[j] = temp$qualite_passe[j]
+}
+}
+assign(paste0('actions_j',i),temp)
+remove(list=c('temp','temp2'))
+}
+actions_tot = rbind(actions_j1,actions_j2,actions_j3,actions_j4,actions_j5,actions_j6,
+actions_j7,actions_j8,actions_j9,actions_j10,actions_j11,actions_j12,
+actions_j13,actions_j14,actions_j15)
+actions_tot$duree_action = NA
+actions_tot$duree_action[which(actions_tot$code!="Temps")] = round(actions_tot$end - actions_tot$start,1)[which(actions_tot$code!="Temps")]
+actions_tot$duree_jeu = NA
+actions_tot$duree_jeu[which(actions_tot$code=="Temps")] = round(actions_tot$end - actions_tot$start,1)[which(actions_tot$code=="Temps")]
+actions_effectif = filter(actions_tot,code=='Temps') %>% select(c(-code,-duree_action,-av_av_dp,-av_dp,-dp,-finalite,-fnt,
+-periode,-qualite_passe,-score,-type_phase,-passe_dec,
+-qualite_passe_dec))
+actions_jeu = filter(actions_tot,code!='Temps') %>% select(c(ID,start,end,duree_action,av_av_dp,av_dp,dp,finalite,fnt,
+periode,qualite_passe,score,type_phase,passe_dec,
+qualite_passe_dec,competition,journee,lieu))
+View(actions_jeu)
+runApp()
+runApp()
+runApp()
+library(readxl)
+Barca_Eibar <- read_excel("C:/Users/intercontrat/Desktop/Benjamin/Sportscode/app/Barca_Eibar.xlsx")
+View(Barca_Eibar)
+Barca_Eibar <- read_excel("Barca_Eibar.xlsx")
+colnames(Barca_Eibar)
