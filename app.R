@@ -23,6 +23,7 @@ library(stringi)
 library(varhandle)
 library(DT)
 library(readxl)
+library(plotly)
 
 
 ## Plus tard, nous aurons besoin de fonds et de thèmes particuliers pour les graphiques de représentations des frappes.
@@ -64,7 +65,7 @@ terrain <- hc_theme_merge(
     ),
     chart = list(
       backgroundColor = "transparent",
-      plotBackgroundImage = "http://wallpaper.pickywallpapers.com/1920x1080/schematic-green-soccer-field.jpg",
+      plotBackgroundImage = "https://github.com/BenjLasserre/Projet-Sportscode/raw/master/terrain5.png",
       style = list(fontFamily = "Century Gothic")
     )
   )
@@ -82,6 +83,53 @@ stats_barca = read.table("Stats_Barca2.txt", header = TRUE,sep = ";", dec=",", n
 # Simplement un travail sur la date de naissance des joueurs, à l'aide de la fonction format (package lubridate) pour imposer une écriture plus usuelle
 Barca_Eibar <- read_excel("Barca_Eibar.xlsx")
 Barca_Eibar$Date_naissance = format(Barca_Eibar$Date_naissance,format="%d/%m/%Y")
+
+## Import du fichier des coordonnées des joueurs (hors gardien) sur un match.
+## Ce fichier a été scrappé sur le site Squawka par quelqu'un d'extérieur sans autorisation, il 
+## est donc uniquement utilisé à titre d'exemple.
+Barca_Eibar_coord <- read_excel("Barca_Eibar_coord.xlsx")
+
+# Afin de récupérer les coordonnées il faut retirer les données sur les duels aériens et les cartons
+# Je ne sais pas pourquoi mais elles sont fausses sur le site et comme elles sont assez minoritaires
+# c'est plus simple de les retirer. Les autres sont données sur l'échelle d'un terrain standard 100x68.
+# On sélectionne ensuite les variables utiles, dans ce cas là où on n'utilise que la journée 9
+# elles ne sont pas toutes utiles mais elles le seront pour choisir les matchs en cas de généralisation.
+# Enfin il est rare qu'un joueur touche plus de 100 ballons par match, dont très peu au même endroit
+# Une idée pour faire une belle matrice de chaleur est donc de faire des zones de 5m*5m pour avoir
+# plusieurs ballons, puis de lisser les valeurs dans la heatmap.
+coord_j9 = Barca_Eibar_coord %>% filter(!(type_event %in% c('Duel_aerien','Carton'))) %>% 
+  select(nom_joueur,nom_equipe_j,adversaire,journee,coord_x,coord_y) %>%
+  mutate(coord_x = floor(coord_x/5)*5, coord_y = floor(coord_y/5)*5)
+
+# Pour pouvoir adapter l'échelle de couleur et qu'elle soit comparable entre tous les joueurs, peu importe le 
+# nombre de ballons touchés par zone, on va prendre comme sommet de l'échelle le maximum sur une zone de tous les 
+# joueurs. On range dans coord_z le nombre d'occurence par zones.
+max_j9 = coord_j9 %>%
+  group_by(nom_joueur,coord_x,coord_y) %>% summarise(coord_z = n())
+
+# Puis pour que la heatmap soit bien placée sur le terrain en fond d'image on va créer toutes les zones, même celles
+# sans touches de balles. On arrondi pour cela les 68m à 70.
+coord_x = data.frame('coord_x' = rep(seq(0,100,5),length(seq(0,70,5))))
+
+coord_x = coord_x %>% arrange(coord_x)
+
+coord_tot = as.data.frame(cbind(coord_x, coord_y = rep(seq(0,70,5),length(seq(0,100,5)))))
+
+## On créé aussi tout de suite l'échelle de couleur puisqu'elle ne dépend que du maximum sur la journée.
+## Je n'explique pas forcément tout, c'est un scripte du site officiel de plotly que j'ai adapté.
+## On commence par définir les valeurs uniques et on associe à chaque valeur une couleur de la palette "YlOrRd"
+## Cette palette va du jaune au rouge et rend bien pour ce que l'on veut faire
+vals <- unique(scales::rescale(c(matrix(max_j9$coord_z))))
+o <- order(vals, decreasing = FALSE)
+cols <- scales::col_numeric("YlOrRd", domain = NULL)(vals)
+# Quand la valeur vaut 0, toutes les zones sans ballon, on force le transparent
+cols[1] = "#F7FBFF00" 
+# Pour les autres couleurs on va forcer une opacité à 90% (en collant E6 à la fin du code hex) parce que ça rend bien.
+for (i in 2:length(cols)) {
+  cols[i] = paste0(cols[i],"E6")
+}
+colz <- setNames(object = data.frame(vals[o], cols[o]), nm = NULL)
+
 
 
 ## Il est maintenant temps de faire du datamanagement pour retravailler à notre guise les données Sportscode
@@ -599,6 +647,21 @@ ui <- dashboardPage(
                   fluidRow(column(width = 6, offset = 0,
                                   div(
                                     style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                                    plotlyOutput(outputId = 'heatmap_j1')
+                                  )
+                                  
+                  ),
+                  column(width = 6, offset = 0,
+                         div(
+                           style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
+                           plotlyOutput(outputId = 'heatmap_j2')
+                         )
+                         
+                  )
+                  ),
+                  fluidRow(column(width = 6, offset = 0,
+                                  div(
+                                    style = 'background-color: rgba(255, 255, 255, 1); width: 100%; display: inline-block;',
                                     highchartOutput(outputId = 'frappes_surface_j1')
                                   )
                                   
@@ -913,6 +976,33 @@ server <- function(input, output, session) {
   ### on va donc conserver les variables adéquates par graphique parmis celles-là et surtout on va associer
   ### une valeur de x et une de y à chaque zone pour bien placer le point sur le graphique résultant.
   
+  ### A l'aide du second fichier Excel on va également dessiner une heatmap pour chacun des deux joueurs en parallèle
+  ### On va donc utiliser les données de la table coord_j9 qu'on a préparé après l'import pour tracer les graphiques.
+  
+  coord_heatmap_j1 = reactive({
+    temp = coord_j9 %>% filter(nom_joueur == input$choix_j1) %>%
+      group_by(coord_x,coord_y) %>% summarise(coord_z = n())
+    
+    temp2 = coord_tot %>% left_join(temp) %>%
+      replace_na(list(coord_z = 0))
+    
+    temp3 = matrix(temp2$coord_z, length(seq(0,70,5)),length(seq(0,100,5)))
+    
+    temp3
+  })
+  
+  coord_heatmap_j2 = reactive({
+    temp = coord_j9 %>% filter(nom_joueur == input$choix_j2) %>%
+      group_by(coord_x,coord_y) %>% summarise(coord_z = n())
+    
+    temp2 = coord_tot %>% left_join(temp) %>%
+      replace_na(list(coord_z = 0))
+    
+    temp3 = matrix(temp2$coord_z, length(seq(0,70,5)),length(seq(0,100,5)))
+    
+    temp3
+  })
+  
   buts_surface_j1 = reactive({
     temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j1),] %>% select(Tirs_6_metres_B,Tirs_surface_B,Tirs_exterieur_B)
     temp = as.data.frame(t(temp))
@@ -924,6 +1014,7 @@ server <- function(input, output, session) {
     rownames(temp) = NULL
     temp
   })  
+  
   
   buts_surface_j2 = reactive({
     temp = Barca_Eibar[which(Barca_Eibar$Joueur==input$choix_j2),] %>% select(Tirs_6_metres_B,Tirs_surface_B,Tirs_exterieur_B)
@@ -997,6 +1088,95 @@ server <- function(input, output, session) {
   ## On créé un graphique scatterplot sur lequel les points seront placés grâce aux variables x et y suscitées.
   ## Enfin pour que ce soit plus joli, et plus clair, les points seront remplacés par des ballons de différentes couleurs
   ## qui ont été fait sous paint.net et placés sur mon github.
+  
+  ## On va également dessiner les heatmap que l'on va placer avant les zones de buts et de frappes.
+  ## On va le faire à l'aide des deux fonctions réactives définies plus haut et avec des graphiques plotly
+  output$heatmap_j1 = renderPlotly({
+    # Cette fois on utilise un graphique plotly et pas highchart car le résultat sera plus proche de ce dont on 
+    # a l'habitude dans le foot.
+    # On utilise les données du reactive et le colz qu'on a créé pour l'échelle de couleur.
+    # On impose un x et un y pour avoir les bonnes dimensions du terrain.
+    # Le zsmooth sert à lisser les données pour le style sinon ça serait des carrés, le zmax est choisi
+    # arbitrairement car il permet de mieux marquer les différences entre les petits nombres de touches
+    # et qu'il y a peu souvent plus de 4 ballons par zone donc ça reste une valeur significative
+    # Enfin le showscale permet de ne pas afficher la légende sinon le 4 serait incohérent
+    plot_ly(z = coord_heatmap_j1(), colorscale = colz, type = "heatmap", x = seq(0,100,5), y = seq(0,70,5),
+            zsmooth = "best", zmin = 0, zmax = 4, showscale = FALSE) %>%
+      layout(
+        # Pour les axes et le terrain de foot en fond on utilise le layout
+        # Exemple trouvé sur internet que j'ai adapté avec les longueur de terrain dans sizex et sizey
+        # Les valeurs de x et y sont là pour gérer un petit décalage des zones par rapport au terrain
+        images = list(
+          list(source ="https://raw.githubusercontent.com/BenjLasserre/Projet-Sportscode/master/terrain5_coord2.png",
+               xref = "x",
+               yref = "y",
+               yanchor = "bottom",
+               x = -2.5,
+               y = -2.5,
+               sizex = 100,
+               sizey = 70,
+               sizing = "stretch",
+               layer = "below")),
+        # Pour les axes l'idée est de les supprimer donc du FALSE partout et comme les petits traits restent
+        # on les met en transparent
+        xaxis = list(
+          title = "",
+          zeroline = FALSE,
+          showline = FALSE,
+          showticklabels = FALSE,
+          tickcolor = "#F7FBFF00",
+          showgrid = FALSE),
+        
+        yaxis = list(
+          title = "",
+          zeroline = FALSE,
+          showline = FALSE,
+          showticklabels = FALSE,
+          tickcolor = "#F7FBFF00",
+          showgrid = FALSE),
+        # On met un titre raccord avec ceux de highcharts (moins de possibilité et pas de subtitle)
+        title = paste0("\n Ballons touchés - ",input$choix_j1)) %>%
+      ## Normalement dans un plotly il y a toute une barre de menu en haut à droite, on peut la supprimer avec config
+      config(displayModeBar = F, showLink = F)
+  })
+  
+  ## Idem que la heatmap_j1
+  output$heatmap_j2 = renderPlotly({
+    plot_ly(z = coord_heatmap_j2(), colorscale = colz, type = "heatmap", x = seq(0,100,5), y = seq(0,70,5),
+            zsmooth = "best", zmin = 0, zmax = 4, showscale = FALSE) %>%
+      layout(
+        images = list(
+          list(source ="https://raw.githubusercontent.com/BenjLasserre/Projet-Sportscode/master/terrain5_coord2.png",
+               xref = "x",
+               yref = "y",
+               yanchor = "bottom",
+               x = -2.5,
+               y = -2.5,
+               sizex = 100,
+               sizey = 70,
+               sizing = "stretch",
+               layer = "below")),
+        
+        xaxis = list(
+          title = "",
+          zeroline = FALSE,
+          showline = FALSE,
+          showticklabels = FALSE,
+          tickcolor = "#F7FBFF00",
+          showgrid = FALSE),
+        
+        yaxis = list(
+          title = "",
+          zeroline = FALSE,
+          showline = FALSE,
+          showticklabels = FALSE,
+          tickcolor = "#F7FBFF00",
+          showgrid = FALSE),
+        title = paste0("\n Ballons touchés - ",input$choix_j2)) %>%
+      config(displayModeBar = F, showLink = F)
+  })
+  
+  
   output$frappes_surface_j1 = renderHighchart({
     highchart() %>% 
       hc_add_theme(surface) %>%
@@ -1010,8 +1190,7 @@ server <- function(input, output, session) {
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
       hc_add_series(name = "Buts",data = buts_surface_j1,
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
-      hc_title(text = "Zones de tirs") %>% 
-      hc_subtitle(text=input$choix_j1,align='center') %>% 
+      hc_title(text = paste0("Zones de tirs - ",input$choix_j1)) %>% 
       # Pour que ce soit plus clair on écrit en blanc le nombre de tirs dans la zone, qu'on a mis comme noms de variables
       hc_plotOptions(
         scatter = list(
@@ -1037,8 +1216,7 @@ server <- function(input, output, session) {
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
       hc_add_series(name = "Buts",data = buts_surface_j2(),
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
-      hc_title(text = "Zones de tirs") %>% 
-      hc_subtitle(text=input$choix_j2,align='center') %>% 
+      hc_title(text = paste0("Zones de tirs - ",input$choix_j2)) %>% 
       hc_plotOptions(
         scatter = list(
           dataLabels = list(
@@ -1139,8 +1317,7 @@ server <- function(input, output, session) {
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
       hc_add_series(name = "Buts",data = buts_j1(),
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
-      hc_title(text = "Zones de tirs") %>% 
-      hc_subtitle(text=input$choix_j1,align='center') %>% 
+      hc_title(text = paste0("Zones de tirs - ",input$choix_j1)) %>% 
       hc_plotOptions(
         scatter = list(
           dataLabels = list(
@@ -1165,8 +1342,7 @@ server <- function(input, output, session) {
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_cadre2.png)')) %>% 
       hc_add_series(name = "Buts",data = buts_j2(),
                     marker = list(symbol = 'url(https://github.com/BenjLasserre/Projet-Sportscode/raw/master/ballon_but2.png)')) %>% 
-      hc_title(text = "Zones de tirs") %>% 
-      hc_subtitle(text=input$choix_j2,align='center') %>%
+      hc_title(text = paste0("Zones de tirs - ",input$choix_j2)) %>%
       hc_plotOptions(
         scatter = list(
           dataLabels = list(
